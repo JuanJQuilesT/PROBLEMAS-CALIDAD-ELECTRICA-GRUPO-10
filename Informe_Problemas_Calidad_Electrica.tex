@@ -1,0 +1,248 @@
+
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish, es-tabla]{babel}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\usepackage{amsmath, amssymb}
+\usepackage{siunitx}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage{enumitem}
+
+\hypersetup{colorlinks=true, linkcolor=black, urlcolor=black, citecolor=black}
+\setlength{\parskip}{0.55em}
+\setlength{\parindent}{0pt}
+
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\small Itinerario en Eléctrica}
+\rhead{\small Problemas de Calidad Eléctrica}
+\cfoot{\thepage}
+
+\titleformat{\section}{\Large\bfseries}{\thesection.}{0.6em}{}
+\titleformat{\subsection}{\bfseries\large}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\bfseries}{\thesubsubsection.}{0.5em}{}
+
+\begin{document}
+\begin{titlepage}\centering
+\includegraphics[width=0.72\textwidth]{figures/ual_logo.png}\\[1.6cm]
+{\Huge\bfseries Problemas de Calidad Eléctrica}\\[0.6cm]
+{\large \textbf{Itinerario en Eléctrica}}\\[1.4cm]
+\begin{tabular}{rl}
+\textbf{Alumno:} & Juan José Quiles Torres \\
+\textbf{Curso académico:} & 2025--2026 \\
+\textbf{Asignatura:} & Itinerario en Eléctrica \\
+\textbf{Grupo:} & 10 \\
+\textbf{Profesor:} & Dr. Ing. Francisco Gil Montoya \\
+\textbf{Fecha:} & \today \\
+\end{tabular}
+\vfill
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Práctica 1: Análisis en dominio del tiempo}
+
+\subsection*{Enunciados}
+\begin{enumerate}[label=\textbf{\arabic*.}]
+\item \textbf{Ejercicio 1.1: Cálculo del valor RMS.} Implementar \texttt{calcRMS.m} y validar con una sinusoidal de \SI{50}{Hz}, \SI{325}{V} pico, muestreada a \SI{1000}{Hz} durante \SI{0.1}{s} (error $<1\%$ respecto a \SI{230}{V}).
+\item \textbf{Ejercicio 1.2: Cruces por cero y frecuencia.} Implementar \texttt{detectCrucesCero.m} y estimar $f$ a partir de cruces consecutivos.
+\item \textbf{Ejercicio 1.3: RMS deslizante.} Implementar \texttt{rmsDeslizante.m} con ventana de \SI{20}{ms} para detectar huecos/sobretensiones.
+\item \textbf{Actividad guiada: Hueco del 50\%.} Señal de \SI{200}{ms} con hueco del 50\% entre \SI{50}{ms} y \SI{100}{ms}; obtener $V_{\mathrm{RMS}}(t)$ y localizar inicio/fin e intensidad.
+\end{enumerate}
+
+\subsection*{Resolución detallada}
+
+\paragraph{Parámetros y método.} Para $v[n]$ y $N$ muestras, el RMS escalar es
+\begin{equation}
+V_{\mathrm{RMS}}=\sqrt{\frac{1}{N}\sum_{n=0}^{N-1} v^2[n]}\,.
+\end{equation}
+La función \texttt{calcRMS.m} implementa literalmente la definición. La estimación de frecuencia usa cruces por cero con interpolación lineal: si $v[n]$ y $v[n{+}1]$ tienen signos opuestos, el instante de cruce es
+\begin{equation}
+t_{zc}=\frac{n+\alpha}{f_s},\qquad \alpha=-\frac{v[n]}{v[n{+}1]-v[n]}\in[0,1].
+\end{equation}
+Con los tiempos $\{t_{zc}\}$, el periodo se estima como $T\approx 2\,\overline{\Delta t}$ y $f\approx 1/T$. El RMS deslizante con ventana $T_w=\SI{20}{ms}$ (un ciclo a \SI{50}{Hz}) se calcula como la raíz de la media móvil de $v^2[n]$ con $N_w=\lfloor T_w f_s\rfloor$.
+
+\paragraph{Resultados numéricos (Ej.\,1.1 y 1.2).} Con $f_s=\SI{1000}{Hz}$, $T=\SI{0.1}{s}$, $v(t)=325\sin(2\pi\cdot 50 t)$, el RMS teórico es $325/\sqrt{2}=\SI{230.00}{V}$; la validación numérica arroja un error relativo $<10^{-3}$. La frecuencia estimada por cruces por cero es $f_{\mathrm{est}}\approx\SI{50.00}{Hz}$.
+
+\begin{figure}[H]\centering
+\IfFileExists{figures/fig_p1_sinusoid.png}{%
+\begin{figure}[H]\centering
+\includegraphics[width=0.9\linewidth]{figures/fig_p1_sinusoid.png}
+\caption{Señal sinusoidal de 50 Hz (325 V pico) y RMS calculado.}
+\end{figure}
+}{\par\textit{[Falta la figura fig_p1_sinusoid.png. Ejecuta los scripts MATLAB para generarla.]}\par}
+
+\caption{Señal sinusoidal de \SI{50}{Hz} (\SI{325}{V} pico) y RMS calculado.}
+\end{figure}
+
+\begin{figure}[H]\centering
+\IfFileExists{figures/fig_p1_zero.png}{%
+\begin{figure}[H]\centering
+\includegraphics[width=0.9\linewidth]{figures/fig_p1_zero.png}
+\caption{Cruces por cero detectados y frecuencia estimada.}
+\end{figure}
+}{\par\textit{[Falta la figura fig_p1_zero.png. Ejecuta los scripts MATLAB para generarla.]}\par}
+
+\caption{Cruces por cero detectados (marcadores) y $f_{\mathrm{est}}$.}
+\end{figure}
+
+\paragraph{Hueco del 50\% (Ej.\,1.3 y actividad).} Se genera un hueco del 50\% entre \SI{50}{ms} y \SI{100}{ms} con $f_s=\SI{2000}{Hz}$. El mínimo teórico durante el hueco es $0.5\times\SI{230}{V}=\SI{115}{V}$. Al usar una ventana de \SI{20}{ms} el inicio/fin se detectan con un retardo aproximado $T_w/2=\SI{10}{ms}$.
+
+\begin{figure}[H]\centering
+\IfFileExists{figures/fig_p1_hole_signal.png}{%
+\begin{figure}[H]\centering
+\includegraphics[width=0.95\linewidth]{figures/fig_p1_hole_signal.png}
+\caption{Señal con hueco del 50\% (50--100 ms).}
+\end{figure}
+}{\par\textit{[Falta la figura fig_p1_hole_signal.png. Ejecuta los scripts MATLAB para generarla.]}\par}
+
+\caption{Señal con hueco del 50\% (50--100 ms).}
+\end{figure}
+
+\begin{figure}[H]\centering
+\IfFileExists{figures/fig_p1_hole_rms.png}{%
+\begin{figure}[H]\centering
+\includegraphics[width=0.95\linewidth]{figures/fig_p1_hole_rms.png}
+\caption{RMS deslizante (ventana 20 ms) con referencias.}
+\end{figure}
+}{\par\textit{[Falta la figura fig_p1_hole_rms.png. Ejecuta los scripts MATLAB para generarla.]}\par}
+
+\caption{RMS deslizante (ventana 20 ms) con referencias: \SI{230}{V}, \SI{207}{V} y \SI{253}{V}.}
+\end{figure}
+
+\section{Práctica 2: Análisis en dominio de la frecuencia}
+
+\subsection*{Enunciados}
+\begin{enumerate}[label=\textbf{\arabic*.}]
+\item \textbf{Ejercicio 2.1: FFT de un solo lado.} Implementar \texttt{calcFFT.m} que devuelva frecuencias positivas y magnitudes normalizadas (duplicando componentes intermedias).
+\item \textbf{Ejercicio 2.2: Armónicos y THD.} Implementar \texttt{analizaArmonicos.m} para medir $V_n$ en $n f_0$ y calcular THD.
+\item \textbf{Ejercicio 2.3: Señal con armónicos.} Generar señal con 3er=15\% y 5º=10\% y analizar espectro y THD.
+\end{enumerate}
+
+\subsection*{Resolución detallada}
+
+\paragraph{FFT de un lado y resolución.} Computamos $Y=\mathrm{FFT}\{v\}$, $P_2=\lvert Y\rvert/N$ y
+\begin{equation}
+P_1[k]=\begin{cases}
+P_2[k], & k=0 \text{ (DC)} \\
+2\,P_2[k], & 0<k<N/2 \\
+P_2[k], & k=N/2 \text{ (Nyquist, si $N$ par)}
+\end{cases}
+\end{equation}
+con $f[k]=k\,f_s/N$ y resolución $\Delta f=f_s/N$.
+
+\begin{figure}[H]\centering
+\IfFileExists{figures/fig_p2_spectrum_pure.png}{%
+\begin{figure}[H]\centering
+\includegraphics[width=0.95\linewidth]{figures/fig_p2_spectrum_pure.png}
+\caption{Espectro de una sinusoidal pura de 50 Hz.}
+\end{figure}
+}{\par\textit{[Falta la figura fig_p2_spectrum_pure.png. Ejecuta los scripts MATLAB para generarla.]}\par}
+
+\caption{Espectro de una sinusoidal pura de \SI{50}{Hz}: un único pico en \SI{50}{Hz}.}
+\end{figure}
+
+\paragraph{Armónicos y THD.} Con $V_1$ fundamental y $V_n$ armónicos ($n\ge 2$),
+\begin{equation}
+\mathrm{THD}(\%)=100\,\sqrt{\sum_{n=2}^{N}\left(\frac{V_n}{V_1}\right)^2}.
+\end{equation}
+Para el caso de ejemplo (3º=15\%, 5º=10\%), el THD teórico es
+\begin{equation}
+\mathrm{THD}_{\mathrm{teo}}(\%)=100\sqrt{0.15^2+0.10^2}\approx \SI{18.03}{\percent}.
+\end{equation}
+La estimación discreta concuerda (pequeñas variaciones por longitud de ventana y \emph{leakage}).
+
+\begin{figure}[H]\centering
+\IfFileExists{figures/fig_p2_wave_4cycles.png}{%
+\begin{figure}[H]\centering
+\includegraphics[width=0.9\linewidth]{figures/fig_p2_wave_4cycles.png}
+\caption{Señal compuesta (primeros 4 ciclos).}
+\end{figure}
+}{\par\textit{[Falta la figura fig_p2_wave_4cycles.png. Ejecuta los scripts MATLAB para generarla.]}\par}
+
+\caption{Señal compuesta (fundamental + 3º 15\% + 5º 10\%). Primeros 4 ciclos.}
+\end{figure}
+
+\begin{figure}[H]\centering
+\IfFileExists{figures/fig_p2_harmonics.png}{%
+\begin{figure}[H]\centering
+\includegraphics[width=0.9\linewidth]{figures/fig_p2_harmonics.png}
+\caption{Barras de armónicos (1..10) y THD estimado.}
+\end{figure}
+}{\par\textit{[Falta la figura fig_p2_harmonics.png. Ejecuta los scripts MATLAB para generarla.]}\par}
+
+\caption{Barras de los 10 primeros armónicos y THD estimado.}
+\end{figure}
+
+\section{Ejercicio del Grupo 10: Señal compuesta (problema de calidad eléctrica)}
+
+\subsection*{Enunciado}
+Duración total: \SI{700}{ms}. Tensión nominal: \SI{325}{V} pico (\SI{230}{V} RMS). Eventos: (1) hueco 30\% (60 ms, inicio 100 ms); (2) período estable 300 ms con 3º=8\%, 5º=5\%; (3) sobretensión 20\% (50 ms).
+
+\subsection*{Resolución detallada}
+
+\paragraph{Generación por tramos y parámetros.} Con $f_0=\SI{50}{Hz}$, $f_s=\SI{2000}{Hz}$ y $V_1=\SI{325}{V}$: tramo base, tramo de hueco (0.70 $V_1$), tramo estable con armónicos (0.08 y 0.05 veces $V_1$ a 3$f_0$ y 5$f_0$), y tramo de sobretensión (1.20 $V_1$).
+
+\begin{figure}[H]\centering
+\IfFileExists{figures/fig_senal_completa.png}{%
+\begin{figure}[H]\centering
+\includegraphics[width=\linewidth]{figures/fig_senal_completa.png}
+\caption{Señal completa con marcas de eventos.}
+\end{figure}
+}{\par\textit{[Falta la figura fig_senal_completa.png. Ejecuta los scripts MATLAB para generarla.]}\par}
+
+\caption{Señal temporal completa con marcas de eventos.}
+\end{figure}
+
+\paragraph{Análisis temporal.} El RMS global es cercano a \SI{230}{V}. Durante el hueco, el nivel teórico es $0.70\times \SI{230}{V}=\SI{161}{V}$; durante la sobretensión, $1.20\times \SI{230}{V}=\SI{276}{V}$. Con ventana de \SI{20}{ms}, el inicio/fin se observan con retardo $\approx \SI{10}{ms}$.
+
+\begin{figure}[H]\centering
+\IfFileExists{figures/fig_RMS.png}{%
+\begin{figure}[H]\centering
+\includegraphics[width=\linewidth]{figures/fig_RMS.png}
+\caption{RMS deslizante (ventana 20 ms) con referencias nominal y ±10\%.}
+\end{figure}
+}{\par\textit{[Falta la figura fig_RMS.png. Ejecuta los scripts MATLAB para generarla.]}\par}
+
+\caption{RMS deslizante (ventana 20 ms) con referencias nominal y $\pm 10\%$.}
+\end{figure}
+
+\paragraph{Análisis frecuencial (fase estable).} Se extrae el intervalo estable y se calcula el espectro: picos medidos en \SI{50}{Hz}, \SI{150}{Hz} y \SI{250}{Hz}. El THD teórico por especificación es
+\begin{equation}
+\mathrm{THD}_{\mathrm{teo}}(\%)=100\sqrt{0.08^2+0.05^2}\approx \SI{9.43}{\percent},
+\end{equation}
+que concuerda con la estimación discreta.
+
+\begin{figure}[H]\centering
+\IfFileExists{figures/fig_fft.png}{%
+\begin{figure}[H]\centering
+\includegraphics[width=0.95\linewidth]{figures/fig_fft.png}
+\caption{Espectro (fase estable) hasta 500 Hz.}
+\end{figure}
+}{\par\textit{[Falta la figura fig_fft.png. Ejecuta los scripts MATLAB para generarla.]}\par}
+
+\caption{Espectro (fase estable) hasta \SI{500}{Hz}.}
+\end{figure}
+
+\begin{figure}[H]\centering
+\IfFileExists{figures/fig_armonicos.png}{%
+\begin{figure}[H]\centering
+\includegraphics[width=0.9\linewidth]{figures/fig_armonicos.png}
+\caption{Primeros 10 armónicos y THD estimado.}
+\end{figure}
+}{\par\textit{[Falta la figura fig_armonicos.png. Ejecuta los scripts MATLAB para generarla.]}\par}
+
+\caption{Primeros 10 armónicos y THD estimado en la fase estable.}
+\end{figure}
+
+\end{document}
